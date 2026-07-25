@@ -128,18 +128,21 @@ function App() {
       </header>
 
       <div className="dashboard-container">
-        <aside>
+        <aside className="panel-left custom-scrollbar">
           <InputPanel inputs={inputs} setInputs={setInputs} />
+        </aside>
+
+        <main className="panel-middle custom-scrollbar">
+          {results && results.length > 0 && <ProjectionChart results={results} />}
+        </main>
+
+        <aside className="panel-right custom-scrollbar">
           <FundSelector 
             portfolios={portfolios} 
             setPortfolios={setPortfolios} 
             forecastBaseline={inputs.forecastBaseline}
           />
         </aside>
-
-        <main>
-          {results && results.length > 0 && <ProjectionChart results={results} />}
-        </main>
       </div>
 
       <footer className="footer">
