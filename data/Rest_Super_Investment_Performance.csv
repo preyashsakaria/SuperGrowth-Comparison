@@ -1,0 +1,36 @@
+﻿Currently showing : Super
+
+Return as at date 30/06/2026
+
+Generated on 25/07/2026
+
+"Past performance is not an indicator of future performance."
+""
+"Investment returns are calculated after tax on investment income, and investment fees and costs and transaction costs, but before the deduction of administration fees."
+""
+"FYTD return means the Financial Year to Date return starting from 1 July."
+""
+"N/A is shown where an investment option has not been available for the relevant time period."
+""
+"Inception dates for each investment option"
+Option,Rest Super,Rest Pension
+Cash,01-10-98,30-09-02
+Capital Stable,01-10-98,13-09-02
+Balanced,01-10-98,13-09-02
+Growth,01-07-88,15-10-06
+Growth - Indexed,06-12-18,06-12-18
+Sustainable Growth,29-03-21,29-03-21
+High Growth,01-10-98,11-07-03
+Australian Shares - Indexed,06-12-18,06-12-18
+Overseas Shares - Indexed,06-12-18,06-12-18
+""
+Investment Option,10 yr % pa,7 yr % pa,5 yr % pa,3 yr % pa,1 yr %,6 mth %,3 mth %,FYTD
+Cash,2.32%,2.49%,3.08%,4.02%,3.81%,1.98%,1.07%,3.81%
+Capital Stable,4.54%,4.24%,4.18%,5.49%,5.36%,2.63%,3.07%,5.36%
+Balanced,6.13%,5.79%,5.59%,7.40%,7.43%,3.28%,4.65%,7.43%
+Growth,7.60%,7.18%,6.94%,9.44%,9.81%,4.20%,6.36%,9.81%
+Growth - Indexed,N/A,8.18%,7.54%,11.23%,9.97%,4.05%,8.08%,9.97%
+Sustainable Growth,N/A,N/A,7.56%,11.34%,9.49%,4.73%,8.36%,9.49%
+High Growth,9.45%,9.07%,8.74%,11.49%,11.76%,4.64%,7.76%,11.76%
+Australian Shares - Indexed,N/A,7.85%,7.62%,10.15%,6.05%,2.09%,3.52%,6.05%
+Overseas Shares - Indexed,N/A,12.62%,12.08%,16.02%,13.63%,4.95%,14.18%,13.63%
