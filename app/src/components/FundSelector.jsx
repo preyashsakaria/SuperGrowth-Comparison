@@ -22,7 +22,7 @@ const FundSelector = ({ allocations, setAllocations, forecastBaseline = '1y' }) 
         percentage: 100 
       }]);
     }
-  }, [selectedCompany, forecastBaseline]);
+  }, [selectedCompany, forecastBaseline, setAllocations]);
 
   // When baseline changes, update the rates of currently selected funds
   useEffect(() => {
@@ -33,7 +33,7 @@ const FundSelector = ({ allocations, setAllocations, forecastBaseline = '1y' }) 
         fundRate: getFundRate(fundObj, forecastBaseline)
       };
     }));
-  }, [forecastBaseline, selectedCompany]);
+  }, [forecastBaseline, selectedCompany, setAllocations]);
 
   const totalAllocated = allocations.reduce((sum, alloc) => sum + parseFloat(alloc.percentage || 0), 0);
 

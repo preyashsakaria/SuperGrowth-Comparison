@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Moon, Sun, Monitor } from 'lucide-react';
 import InputPanel from './components/InputPanel';
 import FundSelector from './components/FundSelector';
