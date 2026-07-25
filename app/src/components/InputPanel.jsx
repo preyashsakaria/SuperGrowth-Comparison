@@ -152,6 +152,9 @@ const InputPanel = ({ inputs, setInputs }) => {
           />
         </div>
       </div>
+      <p className="input-hint" style={{ marginTop: '-0.5rem', marginBottom: '1rem' }}>
+        Note: These fees are treated as a blended average applied across your entire portfolio, regardless of how many providers you select.
+      </p>
 
       <div className="section-divider" />
       <div className="input-group">

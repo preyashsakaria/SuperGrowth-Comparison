@@ -71,16 +71,25 @@ function App() {
     ? fundsData[firstProvider][0]
     : { name: 'Custom', return1y: 0 };
   
-  const [allocations, setAllocations] = useState([
-    { fundName: firstFund.name, fundRate: firstFund.return1y || 0, percentage: 100 }
+  const [portfolios, setPortfolios] = useState([
+    {
+      id: 1,
+      name: 'Portfolio 1',
+      allocations: [
+        { provider: firstProvider, fundName: firstFund.name, fundRate: firstFund.return1y || 0, percentage: 100 }
+      ]
+    }
   ]);
 
   const results = useMemo(() => {
-    return calculateProjection({
-      ...inputs,
-      allocations
+    return portfolios.map(portfolio => {
+      const result = calculateProjection({
+        ...inputs,
+        allocations: portfolio.allocations
+      });
+      return { ...result, portfolioId: portfolio.id, portfolioName: portfolio.name };
     });
-  }, [inputs, allocations]);
+  }, [inputs, portfolios]);
 
   return (
     <>
@@ -122,14 +131,14 @@ function App() {
         <aside>
           <InputPanel inputs={inputs} setInputs={setInputs} />
           <FundSelector 
-            allocations={allocations} 
-            setAllocations={setAllocations} 
+            portfolios={portfolios} 
+            setPortfolios={setPortfolios} 
             forecastBaseline={inputs.forecastBaseline}
           />
         </aside>
 
         <main>
-          {results && <ProjectionChart data={results.data} results={results} />}
+          {results && results.length > 0 && <ProjectionChart results={results} />}
         </main>
       </div>
 

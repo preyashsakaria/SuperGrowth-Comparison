@@ -1,5 +1,5 @@
-import React from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import React, { useState } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const formatCurrency = (value) => {
   if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
@@ -7,59 +7,55 @@ const formatCurrency = (value) => {
   return `$${value}`;
 };
 
+const COLORS = [
+  '#3b82f6', // blue
+  '#10b981', // green
+  '#f59e0b', // orange
+  '#8b5cf6', // purple
+];
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
-    const balance = payload.find(p => p.dataKey === 'balance');
-    const contribs = payload.find(p => p.dataKey === 'contributions');
-    const fees = payload.find(p => p.dataKey === 'fees');
-    const compoundGrowth = balance && contribs
-      ? balance.value - contribs.value - (fees ? fees.value : 0)
-      : 0;
-
     return (
       <div className="chart-tooltip">
         <p className="tooltip-year">Year {label}</p>
-        <div className="tooltip-row">
-          <span className="tooltip-dot" style={{ background: 'var(--chart-line)' }} />
-          <span>Balance</span>
-          <strong>${balance?.value?.toLocaleString() ?? '0'}</strong>
-        </div>
-        {contribs && (
-          <div className="tooltip-row">
-            <span className="tooltip-dot" style={{ background: '#8b5cf6' }} />
-            <span>Contributions</span>
-            <strong>${contribs.value.toLocaleString()}</strong>
+        {payload.map((entry, index) => (
+          <div key={index} className="tooltip-row">
+            <span className="tooltip-dot" style={{ background: entry.color }} />
+            <span>{entry.name}</span>
+            <strong>${entry.value?.toLocaleString() ?? '0'}</strong>
           </div>
-        )}
-        {compoundGrowth > 0 && (
-          <div className="tooltip-row">
-            <span className="tooltip-dot" style={{ background: '#10b981' }} />
-            <span>Interest Earned</span>
-            <strong>${Math.round(compoundGrowth).toLocaleString()}</strong>
-          </div>
-        )}
-        {fees && fees.value > 0 && (
-          <div className="tooltip-row">
-            <span className="tooltip-dot" style={{ background: 'var(--danger-color)' }} />
-            <span>Fees Paid</span>
-            <strong>${fees.value.toLocaleString()}</strong>
-          </div>
-        )}
+        ))}
       </div>
     );
   }
   return null;
 };
 
-const ProjectionChart = ({ data, results }) => {
-  if (!data || data.length === 0) return null;
+const ProjectionChart = ({ results }) => {
+  const [activeTab, setActiveTab] = useState(0); // For switching stats view
 
-  const lastYear = data[data.length - 1];
-  const interestEarned = results.finalBalance - results.totalContributions - (parseFloat(results.initialBalance) || data[0]?.balance || 0);
+  if (!results || results.length === 0) return null;
 
-  // Calculate the percentage of balance that is compound growth
-  const compoundPct = results.finalBalance > 0
-    ? ((results.finalBalance - results.totalContributions) / results.finalBalance * 100).toFixed(1)
+  // Combine data for Recharts
+  // Ensure all result data arrays have the same length
+  const maxYears = Math.max(...results.map(r => r.data.length));
+  const combinedData = [];
+
+  for (let i = 0; i < maxYears; i++) {
+    const point = { year: results[0].data[i]?.year ?? i };
+    results.forEach((r, idx) => {
+      if (r.data[i]) {
+        point[r.portfolioName || `Portfolio ${idx + 1}`] = r.data[i].balance;
+      }
+    });
+    combinedData.push(point);
+  }
+
+  const activeResult = results[activeTab] || results[0];
+  const interestEarned = activeResult.finalBalance - activeResult.totalContributions - (activeResult.data[0]?.balance || 0);
+  const compoundPct = activeResult.finalBalance > 0
+    ? ((activeResult.finalBalance - activeResult.totalContributions) / activeResult.finalBalance * 100).toFixed(1)
     : 0;
 
   return (
@@ -69,32 +65,55 @@ const ProjectionChart = ({ data, results }) => {
         <div>
           <h2>Projection Results</h2>
           <p className="projection-subtitle">
-            Estimated growth over <strong>{lastYear?.year ?? 0} years</strong> at <strong>{results.blendedRate}% p.a.</strong>
-            {parseFloat(results.blendedRate) < 0 && (
-              <span className="rate-warning"> (negative real return)</span>
-            )}
+            Comparing <strong>{results.length}</strong> portfolio{results.length > 1 ? 's' : ''} over <strong>{combinedData[combinedData.length - 1]?.year ?? 0} years</strong>.
           </p>
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Navigation if multiple portfolios */}
+      {results.length > 1 && (
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          {results.map((r, idx) => (
+            <button
+              key={idx}
+              className={`btn-outline ${activeTab === idx ? 'active' : ''}`}
+              onClick={() => setActiveTab(idx)}
+              style={{
+                padding: '0.5rem 1rem',
+                borderRadius: '8px',
+                border: activeTab === idx ? `1px solid ${COLORS[idx % COLORS.length]}` : '1px solid var(--border-color)',
+                background: activeTab === idx ? `${COLORS[idx % COLORS.length]}15` : 'transparent',
+                color: activeTab === idx ? COLORS[idx % COLORS.length] : 'var(--text-muted)',
+                fontWeight: activeTab === idx ? '600' : 'normal',
+                cursor: 'pointer'
+              }}
+            >
+              {r.portfolioName || `Portfolio ${idx + 1}`} Stats
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Stats Grid for Active Portfolio */}
       <div className="stats-grid">
-        <div className="stat-card glass-panel">
+        <div className="stat-card glass-panel" style={{ borderColor: `${COLORS[activeTab % COLORS.length]}40` }}>
           <div className="stat-label">Final Balance</div>
-          <div className="stat-value">${results.finalBalance.toLocaleString()}</div>
+          <div className="stat-value" style={{ color: COLORS[activeTab % COLORS.length] }}>
+            ${activeResult.finalBalance.toLocaleString()}
+          </div>
           <div className="stat-subtext">{compoundPct}% from growth</div>
         </div>
         <div className="stat-card glass-panel">
           <div className="stat-label">Total Contributions</div>
-          <div className="stat-value stat-value-purple">${results.totalContributions.toLocaleString()}</div>
+          <div className="stat-value stat-value-purple">${activeResult.totalContributions.toLocaleString()}</div>
           <div className="stat-subtext">Employer + Extra</div>
         </div>
         <div className="stat-card glass-panel">
           <div className="stat-label">Total Fees Paid</div>
-          <div className="stat-value stat-value-danger">${results.totalFees.toLocaleString()}</div>
+          <div className="stat-value stat-value-danger">${activeResult.totalFees.toLocaleString()}</div>
           <div className="stat-subtext">
-            {results.finalBalance > 0
-              ? `${(results.totalFees / results.finalBalance * 100).toFixed(2)}% of balance`
+            {activeResult.finalBalance > 0
+              ? `${(activeResult.totalFees / activeResult.finalBalance * 100).toFixed(2)}% of balance`
               : '—'}
           </div>
         </div>
@@ -103,24 +122,14 @@ const ProjectionChart = ({ data, results }) => {
           <div className="stat-value stat-value-success">
             ${Math.max(0, Math.round(interestEarned > 0 ? interestEarned : 0)).toLocaleString()}
           </div>
-          <div className="stat-subtext">Interest earned</div>
+          <div className="stat-subtext">Interest earned ({activeResult.blendedRate}% p.a.)</div>
         </div>
       </div>
 
       {/* Chart */}
       <div className="chart-wrapper">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--chart-line)" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="var(--chart-line)" stopOpacity={0.02}/>
-              </linearGradient>
-              <linearGradient id="colorContrib" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.02}/>
-              </linearGradient>
-            </defs>
+          <LineChart data={combinedData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" vertical={false} />
             <XAxis 
               dataKey="year" 
@@ -139,39 +148,30 @@ const ProjectionChart = ({ data, results }) => {
               verticalAlign="top" 
               height={36}
               iconType="circle"
-              formatter={(value) => <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{value}</span>}
+              formatter={(value) => <span style={{ color: 'var(--text-main)', fontSize: '0.85rem' }}>{value}</span>}
             />
-            <Area 
-              type="monotone" 
-              dataKey="balance" 
-              name="Total Balance"
-              stroke="var(--chart-line)" 
-              strokeWidth={2.5}
-              fillOpacity={1} 
-              fill="url(#colorBalance)"
-              animationDuration={800}
-              animationEasing="ease-out"
-            />
-            <Area 
-              type="monotone" 
-              dataKey="contributions" 
-              name="Total Contributions"
-              stroke="#8b5cf6" 
-              strokeWidth={2}
-              fillOpacity={1} 
-              fill="url(#colorContrib)"
-              animationDuration={800}
-              animationEasing="ease-out"
-            />
-          </AreaChart>
+            {results.map((r, idx) => (
+              <Line 
+                key={idx}
+                type="monotone" 
+                dataKey={r.portfolioName || `Portfolio ${idx + 1}`}
+                stroke={COLORS[idx % COLORS.length]} 
+                strokeWidth={3}
+                dot={false}
+                activeDot={{ r: 6 }}
+                animationDuration={800}
+                animationEasing="ease-out"
+              />
+            ))}
+          </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* Yearly Breakdown Table */}
-      {data.length > 2 && (
+      {activeResult.data.length > 2 && (
         <details className="breakdown-details">
           <summary className="breakdown-summary">
-            📊 View Yearly Breakdown
+            📊 View Yearly Breakdown ({activeResult.portfolioName || `Portfolio ${activeTab + 1}`})
           </summary>
           <div className="breakdown-table-wrapper">
             <table className="breakdown-table">
@@ -185,14 +185,14 @@ const ProjectionChart = ({ data, results }) => {
                 </tr>
               </thead>
               <tbody>
-                {data.filter(d => d.year !== undefined && d.year > 0).map(row => (
+                {activeResult.data.filter(d => d.year !== undefined && d.year > 0).map(row => (
                   <tr key={row.year}>
                     <td>{row.year}</td>
                     <td className="td-balance">${row.balance.toLocaleString()}</td>
                     <td>${row.contributions.toLocaleString()}</td>
                     <td className="td-fees">${(row.fees || 0).toLocaleString()}</td>
                     <td className="td-growth">
-                      ${Math.max(0, row.balance - row.contributions - (data[0]?.balance || 0)).toLocaleString()}
+                      ${Math.max(0, row.balance - row.contributions - (activeResult.data[0]?.balance || 0)).toLocaleString()}
                     </td>
                   </tr>
                 ))}
