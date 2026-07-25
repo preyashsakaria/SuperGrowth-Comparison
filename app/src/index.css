@@ -186,6 +186,11 @@ h1, h2, h3 {
   transition: all 0.2s ease;
 }
 
+.input-field option {
+  background-color: var(--bg-color);
+  color: var(--text-main);
+}
+
 .input-field[type="number"], .input-field.number-input {
   font-variant-numeric: tabular-nums;
 }
