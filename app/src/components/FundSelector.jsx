@@ -14,7 +14,7 @@ const FundSelector = ({ allocations, setAllocations, forecastBaseline = '1y' }) 
 
   // When company changes, reset allocations to 100% in the first available fund
   useEffect(() => {
-    const firstFund = fundsData[selectedCompany][0];
+    const firstFund = fundsData[selectedCompany] && fundsData[selectedCompany].length > 0 ? fundsData[selectedCompany][0] : null;
     if (firstFund) {
       setAllocations([{ 
         fundName: firstFund.name, 
@@ -22,7 +22,7 @@ const FundSelector = ({ allocations, setAllocations, forecastBaseline = '1y' }) 
         percentage: 100 
       }]);
     }
-  }, [selectedCompany]);
+  }, [selectedCompany, forecastBaseline]);
 
   // When baseline changes, update the rates of currently selected funds
   useEffect(() => {
@@ -38,8 +38,8 @@ const FundSelector = ({ allocations, setAllocations, forecastBaseline = '1y' }) 
   const totalAllocated = allocations.reduce((sum, alloc) => sum + parseFloat(alloc.percentage || 0), 0);
 
   const handleAddFund = () => {
-    const firstFund = fundsData[selectedCompany][0];
-    if (allocations.length < 5) {
+    const firstFund = fundsData[selectedCompany] && fundsData[selectedCompany].length > 0 ? fundsData[selectedCompany][0] : null;
+    if (allocations.length < 5 && firstFund) {
       setAllocations([...allocations, { 
         fundName: firstFund.name, 
         fundRate: getFundRate(firstFund, forecastBaseline), 

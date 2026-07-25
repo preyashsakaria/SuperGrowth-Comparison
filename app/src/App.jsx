@@ -40,8 +40,11 @@ function App() {
     inflationRate: 2.5,
   });
 
+  const firstProvider = Object.keys(fundsData)[0];
+  const firstFund = fundsData[firstProvider] && fundsData[firstProvider].length > 0 ? fundsData[firstProvider][0] : { name: 'Custom', return1y: 0 };
+  
   const [allocations, setAllocations] = useState([
-    { fundName: fundsData["Rest Super"][0].name, fundRate: fundsData["Rest Super"][0].return1y, percentage: 100 }
+    { fundName: firstFund.name, fundRate: firstFund.return1y || 0, percentage: 100 }
   ]);
 
   const [results, setResults] = useState(null);
