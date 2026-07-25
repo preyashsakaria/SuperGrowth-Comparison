@@ -1,6 +1,7 @@
-app/node_modules/
-app/dist/
-app/.env*.local
-app/.env
+node_modules/
+dist/
+.env*.local
+.env
 .DS_Store
 scratch/
+app/dist/
