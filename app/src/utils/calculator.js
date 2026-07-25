@@ -59,7 +59,10 @@ export const calculateProjection = ({
   // Convert blended annual rate to monthly effective rate: (1 + r)^(1/12) - 1
   const monthlyGrowthRate = Math.pow(1 + (blendedAnnualRate / 100), 1 / 12) - 1;
   const monthlyPercentFee = (parseFloat(percentageFee) || 0) / 100 / 12;
-  const fixedMonthly = parseFloat(monthlyFixedFee) || 0;
+  
+  // Calculate unique providers to multiply fixed admin fee
+  const uniqueProviders = new Set(allocations?.map(a => a.provider).filter(Boolean)).size || 1;
+  const fixedMonthly = (parseFloat(monthlyFixedFee) || 0) * uniqueProviders;
 
   // Track totals
   let totalContributions = 0;
