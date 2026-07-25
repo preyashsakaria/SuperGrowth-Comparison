@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Moon, Sun, Monitor } from 'lucide-react';
 import InputPanel from './components/InputPanel';
 import FundSelector from './components/FundSelector';
@@ -7,7 +7,13 @@ import { calculateProjection } from './utils/calculator';
 import { fundsData } from './data/funds';
 
 function App() {
-  const [theme, setTheme] = useState('system');
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('sg-theme') || 'system';
+    } catch {
+      return 'system';
+    }
+  });
   
   useEffect(() => {
     const root = document.documentElement;
@@ -16,13 +22,33 @@ function App() {
     } else if (theme === 'light') {
       root.removeAttribute('data-theme');
     } else {
-      // System
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         root.setAttribute('data-theme', 'dark');
       } else {
         root.removeAttribute('data-theme');
       }
     }
+    try {
+      localStorage.setItem('sg-theme', theme);
+    } catch {
+      // localStorage not available
+    }
+  }, [theme]);
+
+  // Listen for system theme changes when in 'system' mode
+  useEffect(() => {
+    if (theme !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e) => {
+      const root = document.documentElement;
+      if (e.matches) {
+        root.setAttribute('data-theme', 'dark');
+      } else {
+        root.removeAttribute('data-theme');
+      }
+    };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
   }, [theme]);
 
   const [inputs, setInputs] = useState({
@@ -41,35 +67,35 @@ function App() {
   });
 
   const firstProvider = Object.keys(fundsData)[0];
-  const firstFund = fundsData[firstProvider] && fundsData[firstProvider].length > 0 ? fundsData[firstProvider][0] : { name: 'Custom', return1y: 0 };
+  const firstFund = fundsData[firstProvider] && fundsData[firstProvider].length > 0
+    ? fundsData[firstProvider][0]
+    : { name: 'Custom', return1y: 0 };
   
   const [allocations, setAllocations] = useState([
     { fundName: firstFund.name, fundRate: firstFund.return1y || 0, percentage: 100 }
   ]);
 
-  const [results, setResults] = useState(null);
-
-  useEffect(() => {
-    const projection = calculateProjection({
+  const results = useMemo(() => {
+    return calculateProjection({
       ...inputs,
       allocations
     });
-    setResults(projection);
   }, [inputs, allocations]);
 
   return (
     <>
       <header className="header">
-        <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-          <span style={{ fontSize: '2rem' }}>🚀</span>
+        <h1 className="header-title">
+          <span className="header-icon">🚀</span>
           SuperGrowth Dashboard
         </h1>
         
-        <div className="toggle-group" style={{ width: '150px' }}>
+        <div className="toggle-group theme-toggle">
           <button 
             className={`toggle-btn ${theme === 'light' ? 'active' : ''}`}
             onClick={() => setTheme('light')}
             title="Light Mode"
+            aria-label="Light Mode"
           >
             <Sun size={16} />
           </button>
@@ -77,6 +103,7 @@ function App() {
             className={`toggle-btn ${theme === 'system' ? 'active' : ''}`}
             onClick={() => setTheme('system')}
             title="System Default"
+            aria-label="System Default"
           >
             <Monitor size={16} />
           </button>
@@ -84,6 +111,7 @@ function App() {
             className={`toggle-btn ${theme === 'dark' ? 'active' : ''}`}
             onClick={() => setTheme('dark')}
             title="Dark Mode"
+            aria-label="Dark Mode"
           >
             <Moon size={16} />
           </button>
@@ -104,6 +132,10 @@ function App() {
           {results && <ProjectionChart data={results.data} results={results} />}
         </main>
       </div>
+
+      <footer className="footer">
+        <p>SuperGrowth Dashboard &copy; {new Date().getFullYear()} &mdash; For educational purposes only. Not financial advice.</p>
+      </footer>
     </>
   );
 }
